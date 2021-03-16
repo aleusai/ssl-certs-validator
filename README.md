@@ -32,4 +32,19 @@ Run the script `pytest.sh` to execute the pytest tests for some of the functiona
 
 Once the containers are all up and running, the service can be used e.g. with curl calls to the api endpoints:
 
-`curl -v -H "Accept: application/json" -H "Content-type: application/json" -X POST -d '{"url": "https://expired.badssl.com", "toPrometheus": "True" }' -u <USERNAME>`
+`curl -v -H "Accept: application/json" -H "Content-type: application/json" -X POST -d '{"url": "https://expired.badssl.com", "toPrometheus": "True" }' -u <USERNAME>:<PASSWORD> http://127.0.0.1:5000/api/blackbox`  
+The request is forwarded to the Prometheus Blackbox and an event is submitted to the Pushgateway if the ssl chain is invalid.
+The returned json payload includes the following fields of the leaf ssl certificate in the chain: isValid, issuer, subject. 
+The isValid field refers to the overall validity of the ssl certificate chain e.g. valid self signd certificates are considered invalid. 
+
+`curl -v -H "Accept: application/json" -H "Content-type: application/json" -X POST -d '{"url": "https://expired.badssl.com", "toPrometheus": "True" }' -u <USERNAME>:<PASSWORD> http://127.0.0.1:5000/api/local`  
+The url and its ssl chain is checked by the validator and an event is submitted to the Pushgateway if the ssl chain is invalid.
+The same payload as above is returned to the client.
+
+`curl -v -H "Accept: application/json" -H "Content-type: application/json" -X GET  -u <USERNAME>:<PASSWORD> http://127.0.0.1:5000/api/data`
+The `GET` route returns the submitted queries (shown in a list only up to a maximum of 1K). 
+
+The payload for the two `POST` routes may include a `debug` option, which triggers the returning of extra information about the ssl validation outcome. 
+
+The `local` route may also include the path to a root anchors file, which can then be used for the ssl validation (via an environment variable)
+
