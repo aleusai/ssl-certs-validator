@@ -15,12 +15,6 @@ Furthermore, the Blackbox exporter does not validate the certificates against an
 
 The validator backend is based on Flask, which lends itself very well for quick development/deployment, but should be run in production together with e.g. Gunicorn and Nginx (!not included here!).
 
-## Components
-
-Validator (Flask based backend), Prometheus Pushgateway,  Prometheus Server
-
-All the components are deployed in Docker containers. 
-
 ## Installation and Configuration
 
 Clone the repository and change accordingly the Prometheus configuration files and `docker-compose.yml`. 
@@ -33,6 +27,12 @@ The environment setting requires the existance of a `.env` file with the setting
 - BLACKBOX_TIMEOUT the timeout for the connection to the Blackbox server (default value is 1s)
 
 You can then run the script `dc-up.sh` which will build the validator backend (from its Dockerfile) and start the other containers.
+
+The following docker containers will be created:
+- The Prometheus server, which is confgured (see the file `prometheus/prometheus.orig.yml`) to scrape the Pushgateway server and the Flask based validator: this latter one is scraped as if it were a Blackbox server, with some example urls
+- The Pushgateway server, which can receive in push mode events to be scraped (from the validator)
+- The Flask based validator, which can validate certificates "locally" or via an external Blackbox server; it can push events to the Pushgateway, and can be scraped directly by the Prometheus server
+- The Blackbox exporter, which is used by the validator (it is NOT scraped directly by the Prometheus server in this setup)
 
 ## Testing
 
@@ -59,5 +59,7 @@ The `GET` route returns the submitted queries (shown in a list up to a maximum o
 
 The payload for the two `POST` routes may include a `debug` option, which triggers the returning of extra information about the ssl validation outcome. 
 
-The `local` route may also include the path to a root anchors file, which can then be used for the ssl validation (via an environment variable)
+The `local` route may also include the path to a root anchors file, which can then be used for the ssl validation (via an environment variable).
+
+One fnal endpoint `/api/sb` can be used to scrape the validator server, as a Prometheus exporter: the scraped information is the same as the Blackbox server, with the addition of the OCSP validation: this endpoint can be used by the Prometheus server for predefined targets to scrape, as is usually done with the Blackbox sxporter. 
 
