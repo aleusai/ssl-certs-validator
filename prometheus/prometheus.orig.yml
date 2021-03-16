@@ -1,0 +1,43 @@
+global:
+  scrape_interval:     15s 
+  evaluation_interval: 15s 
+
+  external_labels:
+      monitor: 'cert-test'
+
+alerting:
+  alertmanagers:
+  - static_configs:
+    - targets:
+      - alertmanager:9093
+
+rule_files:
+   - "rules.d/alert.yml"
+
+
+scrape_configs:
+  - job_name: 'blackbox'
+    metrics_path: /api/sb
+    basic_auth:
+      username: $USERNAME
+      password: $PASSWORD
+    params:
+      module: [http_200_module]  
+    static_configs:
+      - targets:
+        - http://prometheus.io    # Target to probe with http.
+        - https://prometheus.io   # Target to probe with https.
+        - http://example.com:8080 # Target to probe with http on port 8080.
+        - https://self-signed.badssl.com # invalid cert
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: flask:5000  
+
+  - job_name: 'pushgateway'
+    static_configs:
+      - targets:
+        - pushgateway:9091
