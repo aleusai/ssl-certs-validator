@@ -1,0 +1,13 @@
+modules:
+  icmp:
+    prober: icmp
+    timeout: 5s
+  http_200_module:
+    prober: http
+    timeout: 5s
+    http:
+      preferred_ip_protocol: ip4
+      valid_status_codes: [200]
+      method: GET
+      no_follow_redirects: false
+      fail_if_not_ssl: true

@@ -1,0 +1,30 @@
+groups:
+  - name: cert-rules
+    rules:
+    - alert: Node down
+      expr: up == 0
+      for: 3m
+      labels:
+        severity: warning
+      annotations:
+        title: Node {{ $labels.host }} is down
+        description: Failed to scrape {{ $labels.job }} on {{ $labels.host }} for more than 3 minutes. Node seems down.
+
+    - alert: CertProblem
+      expr: cert_verification_error_code > 0
+      for: 1m
+      labels:
+        severity: warning
+      annotations:
+        summary: "A url with a certificate failure was detected!"
+        description: "A url with a certificate failure was detected!"
+
+    - alert: StaticBlackboxCertProblem
+      expr: probe_success == 0
+      for: 1m
+      labels:
+        severity: warning
+      annotations:
+        summary: "A url with a certificate failure was detected!"
+        description: "A url with a certificate failure was detected!"
+
