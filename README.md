@@ -14,6 +14,7 @@ This expands on the Prometheus Blackbox exporter main functionality, allowing ss
 Furthermore, the Blackbox exporter does not validate the certificates against an OCSP, which is instead carried out by the validator. 
 
 The validator backend is based on Flask, which lends itself very well for quick development/deployment, but should be run in production together with e.g. Gunicorn and Nginx (!not included here!).
+
 ## Components
 
 Validator (Flask based backend), Prometheus Pushgateway,  Prometheus Server
@@ -22,27 +23,39 @@ All the components are deployed in Docker containers.
 
 ## Installation and Configuration
 
-Clone the repository and change accordingly the Prometheus configuration files and `docker-compose.yml`. You can then run the script `dc-up.sh` which will build the validator backend (form its Dockerfile) and start all the relevant containers.
+Clone the repository and change accordingly the Prometheus configuration files and `docker-compose.yml`. 
+The environment setting requires the existance of a `.env` file with the setting of the environment variables USERNAME and PASSWORD, which are then passed to the docker-file: they are used to authenticate with the Flask backend. Other environment variables that can be set are:
+- PUSH_GATEWAY_SERVER  the hostname of the Pushgateway server
+- PUSH_GATEWAY_PORT  the port the Pushgateway server is listening to (default value is 9091)
+- PUSH_GATEWAY_TIMEOUT  the timeout for the connection to the Pushgateway server (default value is 1s)
+- BLACKBOX_SERVER the hostname of the Blackbox server
+- BLACKBOX_PORT the port the Blackbox server is listening to (default value is 9115)
+- BLACKBOX_TIMEOUT the timeout for the connection to the Blackbox server (default value is 1s)
+
+You can then run the script `dc-up.sh` which will build the validator backend (from its Dockerfile) and start the other containers.
 
 ## Testing
 
-Run the script `pytest.sh` to execute the pytest tests for some of the functionalities offered by the service.
+Run the script `pytest.sh` to execute the pytest tests for some of the functionalities offered by the service. You will need to set the USERNAME and PASSWORD variables (see above) as well as optionally DOCKERUP, which triggers also the tests against the Blackbox and Pushgateway services.
 
 ## Usage
 
 Once the containers are all up and running, the service can be used e.g. with curl calls to the api endpoints:
 
 `curl -v -H "Accept: application/json" -H "Content-type: application/json" -X POST -d '{"url": "https://expired.badssl.com", "toPrometheus": "True" }' -u <USERNAME>:<PASSWORD> http://127.0.0.1:5000/api/blackbox`  
-The request is forwarded to the Prometheus Blackbox and an event is submitted to the Pushgateway if the ssl chain is invalid.
-The returned json payload includes the following fields of the leaf ssl certificate in the chain: isValid, issuer, subject. 
-The isValid field refers to the overall validity of the ssl certificate chain e.g. valid self signd certificates are considered invalid. 
+
+The request in this case is forwarded to the Prometheus Blackbox server and an event is submitted to the Pushgateway (flag `toPrometheus`) if the ssl chain is found to be invalid.
+The returned json payload includes the following fields of the leaf ssl certificate in the chain: `isValid`, `issuer`, `subject`. 
+The `isValid` field refers to the overall validity of the ssl certificate chain e.g. valid self signd certificates are considered invalid. Also, the `subject` field may or not refer to the leaf certificate, e.g. if the chain order is not respected.
 
 `curl -v -H "Accept: application/json" -H "Content-type: application/json" -X POST -d '{"url": "https://expired.badssl.com", "toPrometheus": "True" }' -u <USERNAME>:<PASSWORD> http://127.0.0.1:5000/api/local`  
+
 The url and its ssl chain is checked by the validator and an event is submitted to the Pushgateway if the ssl chain is invalid.
 The same payload as above is returned to the client.
 
 `curl -v -H "Accept: application/json" -H "Content-type: application/json" -X GET  -u <USERNAME>:<PASSWORD> http://127.0.0.1:5000/api/data`
-The `GET` route returns the submitted queries (shown in a list only up to a maximum of 1K). 
+
+The `GET` route returns the submitted queries (shown in a list up to a maximum of 1K). 
 
 The payload for the two `POST` routes may include a `debug` option, which triggers the returning of extra information about the ssl validation outcome. 
 

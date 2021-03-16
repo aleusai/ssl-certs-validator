@@ -49,9 +49,8 @@ def create_app():
                 abort(400)
             debug = False
             url = request.json['url']
-            debug = False if not 'debug' in request.json or not isinstance(request.json['debug'], bool) or \
-                        not request.json['debug'] else bool(request.json['debug'])
-            if request.endpoint == 'blackbox':
+            debug = False if not 'debug' in request.json else bool(request.json['debug'])
+            if request.endpoint == 'api.blackbox':
                 blackbox = True
             else:
                 blackbox = False

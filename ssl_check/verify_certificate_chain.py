@@ -98,12 +98,13 @@ def blackbox_verify(url, port=443):
     """  
 
     blackbox_server = os.getenv('BLACKBOX_SERVER') if os.getenv('BLACKBOX_SERVER') \
-        else 'http://localhost'
+        else 'localhost'
     blackbox_port = os.getenv('BLACKBOX_PORT') if os.getenv('BLACKBOX_PORT') \
         else '9115'  
     blackbox_url='http://' + blackbox_server + ':' + blackbox_port
 
     timeout = 1 if not os.getenv('BLACKBOX_TIMEOUT') else os.getenv('BLACKBOX_TIMEOUT') 
+    
     r = requests.get(blackbox_url + '/probe?target=' \
         + url + '&module=http_200_module', timeout=timeout)
     

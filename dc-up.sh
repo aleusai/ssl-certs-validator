@@ -1,4 +1,3 @@
-. ./env.sh
 
 docker-compose build --no-cache
 

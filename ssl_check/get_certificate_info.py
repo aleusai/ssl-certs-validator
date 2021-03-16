@@ -51,6 +51,7 @@ def get_certificate_info(url, blackbox=True, debug=False):
 
         if debug:
             if blackbox:
+                print('DEBUG')
                 return cert, {
                     'subject': subject_str,
                     'issuer': issuer_str,
