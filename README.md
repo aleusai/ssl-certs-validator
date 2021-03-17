@@ -25,6 +25,7 @@ The environment setting requires the existance of a `.env` file with the setting
 - BLACKBOX_SERVER the hostname of the Blackbox server
 - BLACKBOX_PORT the port the Blackbox server is listening to (default value is 9115)
 - BLACKBOX_TIMEOUT the timeout for the connection to the Blackbox server (default value is 1s)
+- CA_PEM_FILE it points to the file (in the root directory of the repository, so that is copied into the Docker container) containing ad hoc root ca anchors, used by the validator (this file should be created with your own anchors)
 
 You can then run the script `dc-up.sh` which will build the validator backend (from its Dockerfile) and start the other containers.
 
@@ -61,6 +62,6 @@ The payload for the two `POST` routes may include a `debug` option, which trigge
 
 The `local` route may also include the path to a root anchors file, which can then be used for the ssl validation (via an environment variable).
 
-One fnal endpoint `/api/sb` can be used to scrape the validator server, as a Prometheus exporter: the scraped information is the same as the Blackbox server, with the addition of the OCSP validation: this endpoint can be used by the Prometheus server for predefined targets to scrape, as is usually done with the Blackbox sxporter. 
+One fnal endpoint `/api/sb` can be used to scrape the validator server, as a Prometheus exporter: the scraped information is the same as the Blackbox server, with the addition of the OCSP validation: this endpoint can be used by the Prometheus server for predefined targets to scrape, as is usually done with the Blackbox exporter. 
 
 Once all the containers are up and running, you will be able to open the browser at http://localhost:9090 which will show the Prometheus Server page: theree types of alerts are defined i.e. `Node Down`, `CertProblem` and `StaticBlackboxCertProblem`. The first one will be triggered if a static target is not reachable (see the targets under 'Status' in case in the page), the second one is triggered by the scraping of the Pushgateway and refers to the 'dynamic' cert validation failures, while the third refers still to the scraped static ones, when a cert failure was registered. These are just examples, and can be changed as desired via the configuration files.
