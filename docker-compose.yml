@@ -7,6 +7,7 @@ services:
       - BLACKBOX_SERVER=blackbox
       - USERNAME=${USERNAME}
       - PASSWORD=${PASSWORD}
+#     - CA_PEM_FILE=${CA_PEM_FILE}   # this is set to a file containing  ad hoc ca anchors, the root directory of the repo so that is copied into the container   
     build: 
       context: .
       dockerfile: flask-dockerfile/Dockerfile
