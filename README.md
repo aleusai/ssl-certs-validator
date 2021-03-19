@@ -60,7 +60,7 @@ The `GET` route returns the submitted queries (shown in a list up to a maximum o
 
 The payload for the two `POST` routes may include a `debug` option, which triggers the returning of extra information about the ssl validation outcome. 
 
-The `local` route may also include the path to a root anchors file, which can then be used for the ssl validation (via an environment variable).
+When starting the server, a file with ad hoc root anchors can be passed (see the `docker-compose.yml` file), via the environment variable `CA_PEM_FILE`. The file should be present in the root directory at start time, so that it can be copied into the Flask docker container. The ad hoc root anchors will then be used for the ssl validation when using the `local` route.
 
 One fnal endpoint `/api/sb` can be used to scrape the validator server, as a Prometheus exporter: the scraped information is the same as the Blackbox server, with the addition of the OCSP validation: this endpoint can be used by the Prometheus server for predefined targets to scrape, as is usually done with the Blackbox exporter. 
 

@@ -120,6 +120,9 @@ def blackbox_verify(url, port=443):
             probe_success = line_array[1]
             new_probe_success = "1" if probe_success == "1" and ocsp_response else "0"
             new_response = new_response + 'probe_success ' + new_probe_success + '\n' 
+            new_response = new_response + '# HELP ocsp_validaion Whether or not the OCSP validation succeeded\n'
+            new_response = new_response + '# TYPE ocsp_validaion gauge\n'
+            new_response = new_response + 'ocsp_validaion ' + str(int(ocsp_response)) + '\n' 
             continue
         new_response = new_response + _ + '\n' 
     return new_response, probe_success == "1" and ocsp_response
