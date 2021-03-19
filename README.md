@@ -25,7 +25,7 @@ The environment setting requires the existance of a `.env` file with the setting
 - BLACKBOX_SERVER the hostname of the Blackbox server
 - BLACKBOX_PORT the port the Blackbox server is listening to (default value is 9115)
 - BLACKBOX_TIMEOUT the timeout for the connection to the Blackbox server (default value is 1s)
-- CA_PEM_FILE it points to the file (that should be in the root directory of the repository, so that is copied into the Docker container) containing ad hoc root ca anchors, used by the validator (this file should be created with your own anchors). The file will be copied to `/app` in the container and so this environment variable should point to `/app/<YOUR_ANCORS_FILE>` 
+- CA_PEM_FILE it points to the file (that should be in the root directory of the repository, so that is copied into the Docker container) containing ad hoc root ca anchors, used by the validator (this file should be created with your own anchors). The file will be copied to `/app` in the container and so this environment variable should point to `/app/<YOUR_ANCHORS_FILE>` 
 
 You can then run the script `dc-up.sh` which will build the validator backend (from its Dockerfile) and start the other containers.
 
