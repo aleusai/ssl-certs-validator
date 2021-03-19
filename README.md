@@ -25,7 +25,7 @@ The environment setting requires the existance of a `.env` file with the setting
 - BLACKBOX_SERVER the hostname of the Blackbox server
 - BLACKBOX_PORT the port the Blackbox server is listening to (default value is 9115)
 - BLACKBOX_TIMEOUT the timeout for the connection to the Blackbox server (default value is 1s)
-- CA_PEM_FILE it points to the file (in the root directory of the repository, so that is copied into the Docker container) containing ad hoc root ca anchors, used by the validator (this file should be created with your own anchors)
+- CA_PEM_FILE it points to the file (that should be in the root directory of the repository, so that is copied into the Docker container) containing ad hoc root ca anchors, used by the validator (this file should be created with your own anchors). The file will be copied to `/app` in the container and so this environment variable should point to `/app/<YOUR_ANCORS_FILE>` 
 
 You can then run the script `dc-up.sh` which will build the validator backend (from its Dockerfile) and start the other containers.
 
@@ -62,6 +62,6 @@ The payload for the two `POST` routes may include a `debug` option, which trigge
 
 When starting the server, a file with ad hoc root anchors can be passed (see the `docker-compose.yml` file), via the environment variable `CA_PEM_FILE`. The file should be present in the root directory at start time, so that it can be copied into the Flask docker container. The ad hoc root anchors will then be used for the ssl validation when using the `local` route.
 
-One fnal endpoint `/api/sb` can be used to scrape the validator server, as a Prometheus exporter: the scraped information is the same as the Blackbox server, with the addition of the OCSP validation: this endpoint can be used by the Prometheus server for predefined targets to scrape, as is usually done with the Blackbox exporter. 
+One final endpoint `/api/sb` can be used to scrape the validator server, as a Prometheus exporter: the scraped information is the same as the Blackbox server, with the addition of the OCSP validation: this endpoint can be used by the Prometheus server for predefined targets to scrape, as is usually done with the Blackbox exporter. 
 
-Once all the containers are up and running, you will be able to open the browser at http://localhost:9090 which will show the Prometheus Server page: theree types of alerts are defined i.e. `Node Down`, `CertProblem` and `StaticBlackboxCertProblem`. The first one will be triggered if a static target is not reachable (see the targets under 'Status' in case in the page), the second one is triggered by the scraping of the Pushgateway and refers to the 'dynamic' cert validation failures, while the third refers still to the scraped static ones, when a cert failure was registered. These are just examples, and can be changed as desired via the configuration files.
+Once all the containers are up and running, you will be able to open the browser at http://localhost:9090 which will show the Prometheus Server page: three types of alerts are defined i.e. `Node Down`, `CertProblem` and `StaticBlackboxCertProblem`. The first one will be triggered if a static target is not reachable (see the targets under 'Status' in case in the page), the second one is triggered by the scraping of the Pushgateway and refers to the 'dynamic' cert validation failures, while the third refers still to the scraped static ones, when a cert failure was registered. These are just examples, and can be changed as desired via the configuration files.
