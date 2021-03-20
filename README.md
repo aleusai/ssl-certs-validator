@@ -25,7 +25,7 @@ The environment setting requires the existance of a `.env` file with the setting
 - BLACKBOX_SERVER the hostname of the Blackbox server
 - BLACKBOX_PORT the port the Blackbox server is listening to (default value is 9115)
 - BLACKBOX_TIMEOUT the timeout for the connection to the Blackbox server (default value is 1s)
-- CA_PEM_FILE it points to the file (that should be in the root directory of the repository, so that is copied into the Docker container) containing ad hoc root ca anchors, used by the validator (this file should be created with your own anchors). The file will be copied to `/app` in the container and so this environment variable should point to `/app/<YOUR_ANCHORS_FILE>` 
+- CA_PEM_FILE this optional variable allows you to use your own ad hoc certificate anchors for the ssl chain validation (instead of the ones installed with the OS on the disk); it must point to your own file (in the root directory of the repository, so that is copied into the Docker container) containing your root ca anchors, and will be used by the validator when using the `local` endpoint (see below). The file will be copied to `/app` in the container and so this environment variable must be set to `/app/<YOUR_ANCHORS_FILE>` 
 
 You can then run the script `dc-up.sh` which will build the validator backend (from its Dockerfile) and start the other containers.
 
@@ -51,7 +51,7 @@ The `isValid` field refers to the overall validity of the ssl certificate chain 
 
 `curl -v -H "Accept: application/json" -H "Content-type: application/json" -X POST -d '{"url": "https://expired.badssl.com", "toPrometheus": "True" }' -u <USERNAME>:<PASSWORD> http://127.0.0.1:5000/api/local`  
 
-The url and its ssl chain is checked by the validator and an event is submitted to the Pushgateway if the ssl chain is invalid.
+The url and its ssl chain are checked by the validator and an event is submitted to the Pushgateway if the ssl chain is invalid.
 The same payload as above is returned to the client.
 
 `curl -v -H "Accept: application/json" -H "Content-type: application/json" -X GET  -u <USERNAME>:<PASSWORD> http://127.0.0.1:5000/api/data`
