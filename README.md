@@ -1,6 +1,6 @@
 # ssl-certs-validator
 
-## Usecase/Motivation
+## Use case/Motivation
 
 The validator is an ssl certificate verification service, which exposes several restful api endpoints to verify a particular url and its ssl certificate chain ( in a broad sense). It is also a wrapper of the widely used Prometheus Blackbox exporter, and is itself also a Prometheus exporter as it re-exports the (modified) Blackbox metrics. 
 
