@@ -11,7 +11,7 @@ You can do the following:
 Both requests can also include that in case of an invalid certificate chain, an ephemeral event be submitted to the running Prometheus Pushgateway, which is scraped by the Prometheus Server (all these components are created in docker containers, see below).
 This expands on the Prometheus Blackbox exporter main functionality, allowing ssl checks alerts without pre-configuring the targets in the Prometheus Server configuration file.
 
-As a further xtension, the Blackbox exporter does not validate the certificates against an OCSP (it does not have this functionality), which is instead carried out by the validator. 
+As a furher extension, the validator also carries out OCSP validation, as the Blackbox exporter does not have this functionality.
 
 The validator backend is based on Flask, which lends itself very well for quick development/deployment, but should be run in production together with e.g. Gunicorn and Nginx (!not included here!).
 
