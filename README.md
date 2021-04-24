@@ -5,13 +5,13 @@
 The validator is an ssl certificate verification service, which exposes several restful api endpoints to verify a particular url and its ssl certificate chain ( in a broad sense). It is also a wrapper of the widely used Prometheus Blackbox exporter, and is itself also a Prometheus exporter as it re-exports the (modified) Blackbox metrics. 
 
 You can do the following:
-1. validate a url/ssl certificate chain  with a POST request to the validator server which is forwarded to a running instance of the Prometheus Blackbox exporter
-2. you can do the same as above, but the validator server itself does the validation, which allows for the use of ad hoc root anchors
+1. validate a url/ssl certificate chain  with a POST request to the validator server which is forwarded to a running instance of the Prometheus Blackbox exporter; the result is the ANDed with the OCSP check from the validator
+2. you can do the same as above, but the validator server itself does the whole validation, which also allows for the use of ad hoc root anchors
 
 Both requests can also include that in case of an invalid certificate chain, an ephemeral event be submitted to the running Prometheus Pushgateway, which is scraped by the Prometheus Server (all these components are created in docker containers, see below).
 This expands on the Prometheus Blackbox exporter main functionality, allowing ssl checks alerts without pre-configuring the targets in the Prometheus Server configuration file.
 
-Furthermore, the Blackbox exporter does not validate the certificates against an OCSP, which is instead carried out by the validator. 
+As a further xtension, the Blackbox exporter does not validate the certificates against an OCSP (it does not have this functionality), which is instead carried out by the validator. 
 
 The validator backend is based on Flask, which lends itself very well for quick development/deployment, but should be run in production together with e.g. Gunicorn and Nginx (!not included here!).
 
@@ -45,7 +45,7 @@ Once the containers are all up and running, the service can be used e.g. with cu
 
 `curl -v -H "Accept: application/json" -H "Content-type: application/json" -X POST -d '{"url": "https://expired.badssl.com", "toPrometheus": "True" }' -u <USERNAME>:<PASSWORD> http://127.0.0.1:5000/api/blackbox`  
 
-The request in this case is forwarded to the Prometheus Blackbox server and an event is submitted to the Pushgateway (flag `toPrometheus`) if the ssl chain is found to be invalid.
+The request in this case is forwarded to the Prometheus Blackbox server and an event is submitted to the Pushgateway (flag `toPrometheus`) if the ssl chain is found to be invalid. Notice that the validator adds the OCSP check to the overall result from the Prometheus Blackbox i.e. the two are ANDed and for a certificate chain to be considered valid both must be successful.
 The returned json payload includes the following fields of the leaf ssl certificate in the chain: `isValid`, `issuer`, `subject`. 
 The `isValid` field refers to the overall validity of the ssl certificate chain e.g. valid self signd certificates are considered invalid. Also, the `subject` field may or not refer to the leaf certificate, e.g. if the chain order is not respected.
 
