@@ -7,12 +7,14 @@ from datetime import datetime
 from collections import deque
 from ssl_check.get_certificate_info import get_certificate_info
 from ssl_check.send_to_prometheus import to_prometheus_pushgateway 
-
+from flasgger import Swagger
 
 def create_app():
-    app = Flask(__name__)
-    auth = HTTPBasicAuth()
+    app = Flask(__name__)   
     CORS(app)
+    swagger = Swagger(app)
+
+    auth = HTTPBasicAuth()
     api = Blueprint('api', __name__)
 
     valid_certs_urls = deque([], maxlen=1000)
@@ -43,13 +45,58 @@ def create_app():
     @api.route('/blackbox', endpoint='blackbox', methods=['POST'])
     @auth.login_required
     def handle_submit():
+        """ 
+        This is using docstrings for specifications.
+        ---
+        parameters:
+          - name: url
+            in: query
+            type: string
+            description: example payload
+            default: "https://incomplete-chain.badssl.com/"
+          - name: toPrometheus
+            in: query
+            type: string
+            description: example payload
+            default: true
+          - name: debug
+            in: query
+            type: string
+            default: true
+        responses:
+          200:
+            description: ssl validation result in json
+            examples:
+              response: {
+  "debug": "HTTPSConnectionPool(host='incomplete-chain.badssl.com', port=443): Max retries exceeded with url: / (Caused by SSLError(SSLCertVerificationError(1, '[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1076)')))", 
+  "isValid": false, 
+  "issuer": "/C=US/O=DigiCert Inc/CN=DigiCert SHA2 Secure Server CA", 
+  "subject": "/C=US/ST=California/L=Walnut Creek/O=Lucas Garron Torres/CN=*.badssl.com"
+}
+        """
         try:
-            if not request.json:
-                print(request.json)
-                abort(400)
+            url = '' # Compulsory parameter
             debug = False
-            url = request.json['url']
-            debug = False if not 'debug' in request.json else bool(request.json['debug'])
+
+            if not request.json and not request.args:
+                abort(400)
+                
+            if request.json: 
+                if "url" not in request.json:
+                     abort(400)
+                else:
+                    url = request.json['url'] 
+                debug = False if not 'debug' in request.json else True
+                toPrometheus = False if not 'toPrometheus' in request.json else True
+
+            if request.args: 
+                if "url" not in request.args:
+                     abort(400)
+                else:
+                    url = request.args['url'] 
+                debug = False if not 'debug' in request.args else True
+                toPrometheus = False if not 'toPrometheus' in request.args else True
+            
             if request.endpoint == 'api.blackbox':
                 blackbox = True
             else:
@@ -59,13 +106,13 @@ def create_app():
                 valid_certs_urls.append((url, datetime.now()))
             else:
                 invalid_certs_urls.append((url, datetime.now()))
-                if 'toPrometheus' in request.json and os.getenv('PUSH_GATEWAY_SERVER'):
+                if toPrometheus and os.getenv('PUSH_GATEWAY_SERVER'):
                     to_prometheus_pushgateway(os.getenv('PUSH_GATEWAY_SERVER'), url)
 
             return result
         except Exception as e:
             print(e)
-            return {'isValid': None, 'subkect': '', 'issuer': ''}
+            return {'isValid': None, 'subject': '', 'issuer': ''}
 
     @api.route('/sb', methods=['POST', 'GET'])
     @auth.login_required

@@ -13,3 +13,4 @@ pytest-flask==1.2.0
 prometheus-client==0.7.1
 requests==2.23.0
 ocsp-checker==1.6.0
+flasgger==0.9.5
