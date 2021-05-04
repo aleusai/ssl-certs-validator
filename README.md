@@ -65,3 +65,5 @@ When starting the server, a file with ad hoc root anchors can be passed (see the
 One final endpoint `/api/sb` can be used to scrape the validator server, as a Prometheus exporter: the scraped information is the same as the Blackbox server, with the addition of the OCSP validation: this endpoint can be used by the Prometheus server for predefined targets to scrape, as is usually done with the Blackbox exporter. 
 
 Once all the containers are up and running, you will be able to open the browser at http://localhost:9090 which will show the Prometheus Server page: three types of alerts are defined i.e. `Node Down`, `CertProblem` and `StaticBlackboxCertProblem`. The first one will be triggered if a static target is not reachable (see the targets under 'Status' in case in the page), the second one is triggered by the scraping of the Pushgateway and refers to the 'dynamic' cert validation failures, while the third refers still to the scraped static ones, when a cert failure was registered. These are just examples, and can be changed as desired via the configuration files.
+
+**NOTICE** that a Swagger UI is also available at http://localhost:5000/apidocs
