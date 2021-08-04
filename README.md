@@ -18,7 +18,12 @@ The validator backend is based on Flask, which lends itself very well for quick 
 ## Installation and Configuration
 
 Clone the repository and change accordingly the Prometheus configuration files and `docker-compose.yml`. 
-The environment setting requires the existance of a `.env` file with the setting of the environment variables USERNAME and PASSWORD, which are then passed to the docker-file: they are used to authenticate with the Flask backend. Other environment variables that can be set are:
+If working locally (i.e. without docker containers) you can then create a virtual environment with `python3 -m venv venv`, activate it with `source venv/bin/activate`, and then install the packages with `pip3 install -r requirements.txt`. Notice that you will still need the Prometheus blackbox and pushgateway containers, if you want to use them.
+
+The environment setting requires the existance of a `.env` file with the setting of the environment variables USERNAME and PASSWORD, which are then passed to the docker-file: they are used to authenticate with the Flask backend. 
+
+Other environment variables that can be set are:
+- CELERY  it tells the server to use celery to run the certificate validation function: this allows for more performing parallel requests. It requires a celery worker as well as a Redis server (this one can also be run in a docker container, just uncomment the relevant block in the docker compose file to have it created at startup time). It can be set to anything.
 - PUSH_GATEWAY_SERVER  the hostname of the Pushgateway server
 - PUSH_GATEWAY_PORT  the port the Pushgateway server is listening to (default value is 9091)
 - PUSH_GATEWAY_TIMEOUT  the timeout for the connection to the Pushgateway server (default value is 1s)
@@ -27,13 +32,18 @@ The environment setting requires the existance of a `.env` file with the setting
 - BLACKBOX_TIMEOUT the timeout for the connection to the Blackbox server (default value is 1s)
 - CA_PEM_FILE this optional variable allows you to use your own ad hoc certificate anchors for the ssl chain validation (instead of the ones installed with the OS on the disk); it must point to your own file (in the root directory of the repository, so that is copied into the Docker container) containing your root ca anchors, and will be used by the validator when using the `local` endpoint (see below). The file will be copied to `/app` in the container and so this environment variable must be set to `/app/<YOUR_ANCHORS_FILE>` 
 
-You can then run the script `dc-up.sh` which will build the validator backend (from its Dockerfile) and start the other containers.
+You can then run the script `dc-up.sh` which will build the validator backend (from its Dockerfile) and start the other containers. 
+When celery is used, a Redis instance needs to be running, either running the script from the following repository https://github.com/miguelgrinberg/flasky-with-celery (which was the inspiration on how to add celery to Flask) `run-redis.sh` in a separate shell, or using a docker container by uncommenting the relevant block in the docker compose file (preferred solution). 
+When running the services locally without docker containers, the celery worker needs to be started with e.g. launching the command `celery -A celery_worker.celery worker --loglevel=debug`. 
+To use instead a celery docker container, just uncomment the relevant section in the docker compose file (preferred solution). Notice that in the future also RabbitMQ as an alternative to Redis will be added. 
 
 The following docker containers will be created:
 - The Prometheus server, which is confgured (see the file `prometheus/prometheus.orig.yml`) to scrape the Pushgateway server and the Flask based validator: this latter one is scraped as if it were a Blackbox server, with some example urls
 - The Pushgateway server, which can receive in push mode events to be scraped (from the validator)
 - The Flask based validator, which can validate certificates "locally" or via an external Blackbox server; it can push events to the Pushgateway, and can be scraped directly by the Prometheus server
 - The Blackbox exporter, which is used by the validator (it is NOT scraped directly by the Prometheus server in this setup)
+
+Optionally when using celery two more containers will be started i.e. one for the celery worker and one for Redis.
 
 ## Testing
 

@@ -40,3 +40,6 @@ services:
     ports:
       - 9091:9091
 
+  #redis:
+  #  image: "redis:alpine"
+
