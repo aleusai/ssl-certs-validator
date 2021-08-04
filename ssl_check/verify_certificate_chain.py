@@ -101,12 +101,12 @@ def blackbox_verify(url, port=443):
         else 'localhost'
     blackbox_port = os.getenv('BLACKBOX_PORT') if os.getenv('BLACKBOX_PORT') \
         else '9115'  
-    blackbox_url='http://' + blackbox_server + ':' + blackbox_port
+    blackbox_url=''.join(['http://', blackbox_server, ':', blackbox_port])
 
     timeout = 1 if not os.getenv('BLACKBOX_TIMEOUT') else os.getenv('BLACKBOX_TIMEOUT') 
     
-    r = requests.get(blackbox_url + '/probe?target=' \
-        + url + '&module=http_200_module', timeout=timeout)
+    r = requests.get(''.join([blackbox_url, '/probe?target=', url, \
+         '&module=http_200_module']), timeout=timeout)
     
     # crl check
     ocsp_request, ocsp_response = verify_ocsp(url)
@@ -119,10 +119,10 @@ def blackbox_verify(url, port=443):
         if line_array[0] == 'probe_success':
             probe_success = line_array[1]
             new_probe_success = "1" if probe_success == "1" and ocsp_response else "0"
-            new_response = new_response + 'probe_success ' + new_probe_success + '\n' 
-            new_response = new_response + '# HELP ocsp_validaion Whether or not the OCSP validation succeeded\n'
-            new_response = new_response + '# TYPE ocsp_validaion gauge\n'
-            new_response = new_response + 'ocsp_validaion ' + str(int(ocsp_response)) + '\n' 
+            new_response = ''.join([new_response, 'probe_success ', new_probe_success, '\n']) 
+            new_response = ''.join([new_response, '# HELP ocsp_validaion Whether or not the OCSP validation succeeded\n'])
+            new_response = ''.join([new_response, '# TYPE ocsp_validaion gauge\n'])
+            new_response = ''.join([new_response, 'ocsp_validaion ', str(int(ocsp_response)), '\n'])
             continue
-        new_response = new_response + _ + '\n' 
+        new_response = ''.join([new_response, _, '\n']) 
     return new_response, probe_success == "1" and ocsp_response

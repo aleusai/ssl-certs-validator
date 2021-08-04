@@ -5,20 +5,34 @@ from flask import abort
 import os
 from datetime import datetime
 from collections import deque
-from ssl_check.get_certificate_info import get_certificate_info
+from ssl_check.get_certificate_info import celery_get_certificate_info, get_certificate_info 
 from ssl_check.send_to_prometheus import to_prometheus_pushgateway 
 from flasgger import Swagger
+from celery import Celery
+from celery.result import AsyncResult
+from config import  Config
+
+
+celery = Celery(__name__, broker=Config.CELERY_BROKER_URL)
 
 def create_app():
     app = Flask(__name__)   
     CORS(app)
     swagger = Swagger(app)
-
+    app.config['celery_broker_url'] = 'redis://127.0.0.1:6379/0'
+    app.config['result_backend'] = 'redis://127.0.0.1:6379/0'
+    
     auth = HTTPBasicAuth()
     api = Blueprint('api', __name__)
 
     valid_certs_urls = deque([], maxlen=1000)
     invalid_certs_urls = deque([], maxlen=1000)
+
+    celery.conf.update(app.config) #make_celery(app)
+
+    @celery.task(name='app.get_certificate_info_')
+    def celery_get_certificate_info_(url, blackbox, debug):
+        return celery_get_certificate_info(url, blackbox, debug)
 
     @auth.get_password
     def get_password(username):
@@ -101,7 +115,12 @@ def create_app():
                 blackbox = True
             else:
                 blackbox = False
-            cert, result = get_certificate_info(url, blackbox, debug)
+            if os.getenv('CELERY'):
+                result = celery_get_certificate_info_.delay(url, blackbox, debug)
+                result = celery_get_certificate_info_.AsyncResult(str(result.id)).get()
+            else:
+                cert, result = get_certificate_info(url, blackbox, debug)
+            
             if result['isValid']:
                 valid_certs_urls.append((url, datetime.now()))
             else:
@@ -122,7 +141,11 @@ def create_app():
             url = request.args.get('target')
 
             blackbox = True
-            cert, result = get_certificate_info(url, blackbox, debug)
+            if os.getenv('CELERY'):
+                result = celery_get_certificate_info_.delay(url, blackbox, debug)
+                result = AsyncResult(result.id).get()
+            else:
+                cert, result = get_certificate_info(url, blackbox, debug)
             if result['isValid']:
                 valid_certs_urls.append((url, datetime.now()))
             else:

@@ -11,15 +11,15 @@ def to_prometheus_pushgateway(prometheus_pushgateway, url):
             else 'localhost'
         pg_port = os.getenv('PUSH_GATEWAY_PORT') if os.getenv('PUSH_GATEWAY_PORT') \
             else '9091'  
-        pg_url='http://' + pg_server + ':' + pg_port
-        
+        pg_url=''.join(['http://', pg_server,':',pg_port])
+
         job_name='cert_validity_alert'
 
         instance_name = urllib.parse.urlparse(url).netloc
         team_name = 'certTeam'
         payload_key = 'cert_verification_error_code'
         payload_value = '1'  # different error codes might signal different poblems
-        endpoint = pg_url + '/metrics/job/{j}/instance/{i}/team/{t}'.format(j=job_name, i=instance_name, t=team_name)
+        endpoint = '{pg_url}/metrics/job/{j}/instance/{i}/team/{t}'.format(pg_url=pg_url, j=job_name, i=instance_name, t=team_name)
         response = requests.post(endpoint, data='{k} {v}\n'.format(k=payload_key, v=payload_value), timeout=timeout)
         print('Prometheus pushgateway response status code: ', response.status_code)
         return response.status_code

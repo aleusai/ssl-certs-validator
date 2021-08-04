@@ -11,6 +11,8 @@ service-identity==18.1.0
 pytest==6.2.2
 pytest-flask==1.2.0
 prometheus-client==0.7.1
-requests==2.23.0
-ocsp-checker==1.6.0
+requests==2.25.1
+ocsp-checker==1.8.2
 flasgger==0.9.5
+celery==5.1.2
+redis==3.5.3
