@@ -33,21 +33,27 @@ Other environment variables that can be set are:
 - CA_PEM_FILE this optional variable allows you to use your own ad hoc certificate anchors for the ssl chain validation (instead of the ones installed with the OS on the disk); it must point to your own file (in the root directory of the repository, so that is copied into the Docker container) containing your root ca anchors, and will be used by the validator when using the `local` endpoint (see below). The file will be copied to `/app` in the container and so this environment variable must be set to `/app/<YOUR_ANCHORS_FILE>` 
 
 You can then run the script `dc-up.sh` which will build the validator backend (from its Dockerfile) and start the other containers. 
-When celery is used, a Redis instance needs to be running, either running the script from the following repository https://github.com/miguelgrinberg/flasky-with-celery (which was the inspiration on how to add celery to Flask) `run-redis.sh` in a separate shell, or using a docker container by uncommenting the relevant block in the docker compose file (preferred solution). 
-When running the services locally without docker containers, the celery worker needs to be started with e.g. launching the command `celery -A celery_worker.celery worker --loglevel=debug`. 
-To use instead a celery docker container, just uncomment the relevant section in the docker compose file (preferred solution). Notice that in the future also RabbitMQ as an alternative to Redis will be added. 
+When celery is used, a Redis instance needs to be running, either running the script `run-redis.sh` from the following repository https://github.com/miguelgrinberg/flasky-with-celery (which was the inspiration on how to add celery to Flask) in a separate shell, or using theas created by docker compose (preferred solution). 
+When running the services locally without docker containers, the celery worker needs to be started with e.g. launching the command `celery -A celery_worker.celery worker --loglevel=debug`; the tweaking of celery is discussed in the official documentation and is necessary as otherwise the performance with celery might even be worse. 
+
+Any tweaking of celery in the Flask server can be done in file `config.py`. 
+A celery docker container is started by docker compose. Should you want to use RabbitMQ as an alternative to Redis you should make the necessary changes in the `config.py` file. Notice that no flower container for celery is started, but this can be easily added in the docker compose file.
 
 The following docker containers will be created:
 - The Prometheus server, which is confgured (see the file `prometheus/prometheus.orig.yml`) to scrape the Pushgateway server and the Flask based validator: this latter one is scraped as if it were a Blackbox server, with some example urls
 - The Pushgateway server, which can receive in push mode events to be scraped (from the validator)
 - The Flask based validator, which can validate certificates "locally" or via an external Blackbox server; it can push events to the Pushgateway, and can be scraped directly by the Prometheus server
 - The Blackbox exporter, which is used by the validator (it is NOT scraped directly by the Prometheus server in this setup)
+- The celery container (used by Flask, when the CELERY environment variable is set)
+- The redis container (used by celery)
 
-Optionally when using celery two more containers will be started i.e. one for the celery worker and one for Redis.
+Should you prefer NOT to use celeris and redis, just comment out the relevant blocks in the docker compose file.
 
 ## Testing
 
 Run the script `pytest.sh` to execute the pytest tests for some of the functionalities offered by the service. You will need to set the USERNAME and PASSWORD variables (see above) as well as optionally DOCKERUP, which triggers also the tests against the Blackbox and Pushgateway services.
+
+The (very basic) script `perf_test.py` can be used to run performance tests when e.g. using celery.
 
 ## Usage
 

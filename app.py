@@ -11,26 +11,27 @@ from flasgger import Swagger
 from celery import Celery
 from celery.result import AsyncResult
 from config import  Config
+from kombu import Exchange, Queue
 
-
-celery = Celery(__name__, broker=Config.CELERY_BROKER_URL)
+celery = Celery(__name__, broker=Config.celery_broker_url)
 
 def create_app():
     app = Flask(__name__)   
     CORS(app)
     swagger = Swagger(app)
-    app.config['celery_broker_url'] = 'redis://127.0.0.1:6379/0'
-    app.config['result_backend'] = 'redis://127.0.0.1:6379/0'
-    
+    app.config.task_queues = (
+            Queue('transient', Exchange('transient', delivery_mode=1),
+          routing_key='transient', durable=False),)
+
     auth = HTTPBasicAuth()
     api = Blueprint('api', __name__)
 
     valid_certs_urls = deque([], maxlen=1000)
     invalid_certs_urls = deque([], maxlen=1000)
 
-    celery.conf.update(app.config) #make_celery(app)
+    celery.conf.update(app.config) 
 
-    @celery.task(name='app.get_certificate_info_')
+    @celery.task(name='app.get_certificate_info_', queue='transient')
     def celery_get_certificate_info_(url, blackbox, debug):
         return celery_get_certificate_info(url, blackbox, debug)
 
@@ -91,7 +92,7 @@ def create_app():
         try:
             url = '' # Compulsory parameter
             debug = False
-
+            print('*****', request.json)
             if not request.json and not request.args:
                 abort(400)
                 
@@ -116,7 +117,7 @@ def create_app():
             else:
                 blackbox = False
             if os.getenv('CELERY'):
-                result = celery_get_certificate_info_.delay(url, blackbox, debug)
+                result = celery_get_certificate_info_.apply_async(args=(url, blackbox, debug), queue='transient')
                 result = celery_get_certificate_info_.AsyncResult(str(result.id)).get()
             else:
                 cert, result = get_certificate_info(url, blackbox, debug)
@@ -142,7 +143,7 @@ def create_app():
 
             blackbox = True
             if os.getenv('CELERY'):
-                result = celery_get_certificate_info_.delay(url, blackbox, debug)
+                result = celery_get_certificate_info_.apply_async(args=(url, blackbox, debug), queue='transient')
                 result = AsyncResult(result.id).get()
             else:
                 cert, result = get_certificate_info(url, blackbox, debug)
