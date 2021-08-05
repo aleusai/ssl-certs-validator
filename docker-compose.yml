@@ -2,19 +2,38 @@ version: "3"
 services:
 
   flask:
+    container_name: flask
     environment:
       - PUSH_GATEWAY_SERVER=pushgateway
       - BLACKBOX_SERVER=blackbox
       - USERNAME=${USERNAME}
       - PASSWORD=${PASSWORD}
-#     - CA_PEM_FILE=${CA_PEM_FILE}   # this is set to a file containing  ad hoc ca anchors, the root directory of the repo so that is copied into the container   
+      - CELERY=${CELERY}
+      - CA_PEM_FILE=${CA_PEM_FILE}   # this is set to a file containing  ad hoc ca anchors, the root directory of the repo so that is copied into the container   
     build: 
       context: .
       dockerfile: flask-dockerfile/Dockerfile
     ports:
       - 5000:5000
+    links:
+      - redis
+    depends_on:
+      - redis
+
+  celery:
+    container_name: celery
+    build:
+      context: .
+      dockerfile: flask-dockerfile/Dockerfile
+    command: ['/home/app/.local/bin/celery', '-A', 'celery_worker.celery', 'worker', '-l', 'INFO', '--without-heartbeat', '--without-gossip', '--without-mingle', '--concurrency', '20', '-Q', 'transient', '-Ofair']
+    user: app
+    links:
+      - redis
+    volumes:
+      - .:/usr/src/app:ro 
 
   prometheus:
+    container_name: prometheus
     environment:
       - USERNAME=${USERNAME}
       - PASSWORD=${PASSWORD}
@@ -26,9 +45,9 @@ services:
     volumes:
       - ./prometheus/alerts/:/etc/prometheus/rules.d/
 
-
   blackbox:
     image: prom/blackbox-exporter
+    container_name: blackbox
     command: --config.file=/config/blackbox2.yml --log.level=debug
     ports:
       - 9115:9115
@@ -40,6 +59,8 @@ services:
     ports:
       - 9091:9091
 
-  #redis:
-  #  image: "redis:alpine"
-
+  redis:
+    image: redis:latest
+    container_name: redis
+    ports:
+     - '6379:6379'

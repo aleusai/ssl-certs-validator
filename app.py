@@ -92,7 +92,6 @@ def create_app():
         try:
             url = '' # Compulsory parameter
             debug = False
-            print('*****', request.json)
             if not request.json and not request.args:
                 abort(400)
                 
