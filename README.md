@@ -20,7 +20,7 @@ The validator backend is based on Flask, which lends itself very well for quick 
 Clone the repository and change accordingly the Prometheus configuration files and `docker-compose.yml`. 
 If working locally (i.e. without docker containers) you can then create a virtual environment with `python3 -m venv venv`, activate it with `source venv/bin/activate`, and then install the packages with `pip3 install -r requirements.txt`. Notice that you will still need the Prometheus blackbox and pushgateway containers, if you want to use them.
 
-The environment setting requires the existance of a `.env` file with the setting of the environment variables USERNAME, PASSWORD and optionally (but recommended) CELERY (e.g. set to `ON`), which are then passed to the docker-file: they are used to authenticate with the Flask backend. 
+The environment setting requires the existance of a `.env` file with the setting of the environment variables USERNAME, PASSWORD, which are then passed to the docker-file: they are used to authenticate with the Flask backend. 
 
 Other environment variables that can be set are:
 - CELERY  it tells the server to use Celery to run the certificate validation function: this allows for more performing parallel requests. It requires a Celery worker as well as a Redis server (this one can also be run in a docker container, just uncomment the relevant block in the docker compose file to have it created at startup time). It can be set to anything.
