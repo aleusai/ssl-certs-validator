@@ -9,7 +9,7 @@ You can do the following:
 2. you can do the same as above, but the validator server itself does the whole validation, which also allows for the use of ad hoc root anchors
 
 Both requests can also include that in case of an invalid certificate chain, an ephemeral event be submitted to the running Prometheus Pushgateway, which is scraped by the Prometheus Server (all these components are created in docker containers, see below).
-This expands on the Prometheus Blackbox exporter main functionality, allowing ssl checks alerts without pre-configuring the targets in the Prometheus Server configuration file.
+This expands on the Prometheus Blackbox exporter main functionality, allowing ssl checks alerts without pre-configuring the targets in the Prometheus Server configuration file. It also allows the monitoring of servers' certificates that are e.g. behind a vpn and so not directly reachable (a cron job on the servers can then trigger the verification in outbound mode). 
 
 As a furher extension, the validator also carries out OCSP validation, as the Blackbox exporter does not have this functionality.
 
