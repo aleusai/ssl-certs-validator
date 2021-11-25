@@ -5,7 +5,7 @@
 The validator is an ssl certificate verification service, which exposes several restful api endpoints to verify a particular url and its ssl certificate chain ( in a broad sense). It is also a wrapper of the widely used Prometheus Blackbox exporter, and is itself also a Prometheus exporter as it re-exports the (modified) Blackbox metrics. 
 
 You can do the following:
-1. validate a url/ssl certificate chain  with a POST request to the validator server which is forwarded to a running instance of the Prometheus Blackbox exporter; the result is the ANDed with the OCSP check from the validator
+1. validate a url/ssl certificate chain  with a POST request to the validator server which is forwarded to a running instance of the Prometheus Blackbox exporter; the result is then ANDed with the OCSP check from the validator
 2. you can do the same as above, but the validator server itself does the whole validation, which also allows for the use of ad hoc root anchors
 
 Both requests can also include that in case of an invalid certificate chain, an ephemeral event be submitted to the running Prometheus Pushgateway, which is scraped by the Prometheus Server (all these components are created in docker containers, see below).
